@@ -56,8 +56,6 @@ Approve the browser prompt with your existing Signado account and choose the wor
 
 Every paid response includes `credits_charged`, `balance_after`, and `session_spend_total`.
 
-Deep Dive is not currently available through MCP.
-
 ## Security model
 
 - OAuth sign-in through your browser.
