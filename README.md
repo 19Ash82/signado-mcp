@@ -43,7 +43,7 @@ Approve the browser prompt with your existing Signado account and choose the wor
 | Tool | What it does | Cost |
 |---|---|---:|
 | `preview_source` | Previews posts and engagers for a keyword or creator before activation. | 1 credit |
-| `add_source` | Adds or reactivates a source after an explicit confirmation step. | 0 credits to add, then 3 credits per new warm lead |
+| `add_source` | Adds a monitoring source: track a competitor or creator LinkedIn profile, or a LinkedIn keyword. Shows projected daily credit cost before activation and requires confirmation. | 0 credits to add, then 3 credits per new warm lead |
 | `remove_source` | Archives a source while keeping the history in place. | 0 credits |
 
 ### Enrichment and outreach
