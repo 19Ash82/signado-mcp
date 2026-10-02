@@ -74,3 +74,4 @@ Every paid response includes `credits_charged`, `balance_after`, and `session_sp
 - Canonical page: https://signado.io/mcp
 - Setup guide: https://signado.io/help/mcp/mcp-overview
 - Start Free: https://app.signado.io/sign-up
+- Discover Signado: https://signado.io
