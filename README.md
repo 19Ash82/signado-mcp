@@ -51,7 +51,7 @@ Approve the browser prompt with your existing Signado account and choose the wor
 | Tool | What it does | Cost |
 |---|---|---:|
 | `find_email` | Finds emails for selected leads and writes results back to Warm Leads. | 5 credits per contact |
-| `draft_message` | Creates campaign-backed AI drafts for selected warm leads. | 7 credits per contact |
+| `draft_message` | Creates campaign-backed AI drafts for selected warm leads. | 3 credits per contact |
 | `save_template` | Saves a workspace template with custom variables for future drafts. | 0 credits |
 
 Every paid response includes `credits_charged`, `balance_after`, and `session_spend_total`.
