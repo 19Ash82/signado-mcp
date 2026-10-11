@@ -60,7 +60,7 @@ or auth header is needed.
 
 ## Tools and credit costs
 
-The connector advertises 15 tools. `qualify` and `catchup_source` are hidden from the listing but remain callable as compatibility aliases, for 17 callable tools in total.
+The connector advertises 17 tools. `qualify` and `catchup_source` are hidden from the listing but remain callable as compatibility aliases, for 19 callable tools in total.
 
 ### Read and export
 
@@ -71,17 +71,18 @@ The connector advertises 15 tools. `qualify` and `catchup_source` are hidden fro
 | `get_best_of_run` | Returns stored Best of run selections from completed Discovery runs. Mechanical runs rank by composite score, always keep the top lead, then keep scores of at least 60 up to five. The exact quote and run boundary remain; verdict, why, and angle are nullable legacy fields from historical model-selected runs. | 0 credits |
 | `get_warm_lead_detail` | Loads one warm lead's complete LinkedIn engagement history on demand. | 0 credits |
 | `export_leads` | Exports warm leads as structured CSV rows for a date window. | 0 credits |
+| `list_hiring_leads` | Lists Hiring leads: companies whose LinkedIn job posts are hiring for the roles in your Hiring sources, with the job, the fit, the poster and the person to contact, plus each Hiring source's recent totals. | 0 credits |
 | `list_templates` | Lists system templates, workspace templates, and authoring rules. | 0 credits |
 
 ### Discovery sources
 
 | Tool | What it does | Cost |
 |---|---|---:|
-| `preview_source` | Optionally previews a keyword, creator, Company page, or post source. Completed empty previews retain their fixed charge; a Company page with no recent original posts is a valid empty result. | 1 credit |
-| `add_source` | Adds keyword, creator, or Company page monitoring with an optional Daily or Custom schedule, or saves a LinkedIn post PAUSED for Once-only discovery. Post scope is Commenters, Reactors, or Both (default Both); post creation never accepts or seeds a recurring schedule. | 0 credits to add, then normal discovery credits when run |
-| `set_source_schedule` | Changes an existing keyword, creator, or Company page source to Daily or to selected ISO weekdays at one local time in an IANA timezone. Edits affect only future runs. | 0 credits |
-| `run_source_once` | Runs an active/paused keyword, creator, or Company page, or a paused post, once. Post Both requires at least two lead slots. Zero-engagement runs settle unused lead credits. | 0 credits to queue, then credits for leads actually found |
-| `cancel_source_run` | Cancels an in-flight one-time run. Leads already found stay; unspent credits come back automatically. | 0 credits |
+| `preview_source` | Optionally previews a keyword, creator, Company page, Hiring, or post source. A Hiring preview lists recent job posts, not scored yet. Completed empty previews retain their fixed charge; a Company page with no recent original posts is a valid empty result. | 1 credit |
+| `add_source` | Adds keyword, creator, Company page, or Hiring monitoring (1-3 job titles and a required country, or "anywhere") with an optional Daily or Custom schedule; starting it scans now, then it follows the schedule: the last 24 hours (a creator or Company page: its latest post from the last 7 days, skipped at no charge when an earlier scan already covered it), or with `lookback_days` 7 and `max_credits` the last 7 days (spent at once, outside the daily budget). It can also save a LinkedIn post PAUSED for Once-only discovery. Post scope is Commenters, Reactors, or Both (default Both); post creation never accepts or seeds a recurring schedule. | 0 credits to add, then normal discovery credits when run; with `lookback_days` 7, up to `max_credits` at once |
+| `set_source_schedule` | Changes an existing keyword, creator, Company page, or Hiring source to Daily or to selected ISO weekdays at one local time in an IANA timezone. A Custom schedule takes effect at its next selected day and time; switching an active source to Daily makes its next scan due now (the last 24 hours; for Hiring, the time since its last scan); saving the schedule it already has changes nothing. | 0 credits |
+| `run_source_once` | Runs an active/paused keyword, creator, Company page, or Hiring source, or a paused post, once. Post Both requires at least two lead slots. Zero-engagement runs settle unused lead credits. | 0 credits to queue, then credits for leads actually found |
+| `cancel_source_run` | Stops an in-flight one-time run, including the 7-day scan that started a source. Stopping starts no other scan; the source keeps its schedule. Leads already found stay; unspent credits come back automatically. | 0 credits |
 | `catchup_source` | Legacy alias of `run_source_once`, kept for back-compat. | Same as `run_source_once` |
 | `remove_source` | Archives a source while keeping the history in place. | 0 credits |
 
@@ -97,8 +98,13 @@ The connector advertises 15 tools. `qualify` and `catchup_source` are hidden fro
 Custom schedules use ISO weekday numbers (`1` = Monday through `7` = Sunday),
 one `local_time` for every selected weekday, and an IANA timezone such as
 `Europe/London`. Both `add_source` and `set_source_schedule` show a no-write
-plan first and require `confirm: true` to change monitoring. Schedule edits
-recompute the next future run and never trigger a retroactive run. Post sources
+plan first and require `confirm: true` to change monitoring. A Custom
+schedule edit takes effect at the next selected day and time; switching an
+active source to Daily makes its next scan due now; saving the schedule a
+source already has changes nothing. When a start's first scan has to wait (a
+scan failed in the last day, the source already used today's budget share,
+the balance is low, or the daily budget funds other sources first), the
+`add_source` result says when it runs. Post sources
 remain Once-only and reject Daily or Custom schedules. The saved UTC due instant
 remains canonical if an MCP runtime cannot render a PostgreSQL-supported zone
 alias locally; the tool returns a localization warning instead of failing after
@@ -146,7 +152,8 @@ Examples:
 |---|---|---:|
 | `find_email` | Finds emails for selected leads and writes results back to Warm Leads. | 5 credits per contact |
 | `qualify` | Deprecated compatibility name for re-scoring one warm lead with stored person, post, and company evidence. It reruns Luna without refreshing provider evidence. | 1 credit for one contact |
-| `draft_message` | Creates campaign-backed AI drafts for selected warm leads. | 3 credits per contact |
+| `draft_message` | Creates campaign-backed AI drafts for selected warm leads, or for Hiring leads with `hiring_lead_ids` (leads without a person are skipped and not charged). | 3 credits per contact |
+| `add_hiring_lead_person` | Attaches the right person to a Hiring lead that has none, or whose poster is a recruiter. | 0 credits |
 | `save_template` | Saves a workspace template with custom variables for future drafts. | 0 credits |
 
 Every paid response includes `credits_charged`, `balance_after`, and `session_spend_total`.
@@ -168,7 +175,7 @@ Every paid response includes `credits_charged`, `balance_after`, and `session_sp
 
 - Grok Bot desktop 0.66.0: a fresh 2026-10-02 connection, added by asking the bot in chat to add a custom MCP server called signado at `https://mcp.signado.io/mcp` with OAuth sign-in and no auth header, completed OAuth from the connect card, listed 15 advertised tools, and passed `ping` and `list_warm_leads`.
 
-The current 15-tool source contract requires the same client acceptance after an MCP deployment. The four 14-tool checks above are dated historical receipts.
+The current 17-tool source contract (Release C) requires the same client acceptance after an MCP deployment. The four 14-tool checks above are dated historical receipts.
 
 ## Links
 
