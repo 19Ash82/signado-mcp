@@ -71,7 +71,7 @@ The connector advertises 17 tools. `qualify` and `catchup_source` are hidden fro
 | `get_best_of_run` | Returns stored Best of run selections from completed Discovery runs. Mechanical runs rank by composite score, always keep the top lead, then keep scores of at least 60 up to five. The exact quote and run boundary remain; verdict, why, and angle are nullable legacy fields from historical model-selected runs. | 0 credits |
 | `get_warm_lead_detail` | Loads one warm lead's complete LinkedIn engagement history on demand. | 0 credits |
 | `export_leads` | Exports warm leads as structured CSV rows for a date window. | 0 credits |
-| `list_hiring_leads` | Lists Hiring leads: companies whose LinkedIn job posts are hiring for the roles in your Hiring sources, with the job, the fit, the poster and the person to contact, plus each Hiring source's recent totals. | 0 credits |
+| `list_hiring_leads` | Lists Hiring leads: companies whose LinkedIn job posts are hiring for the roles in your Hiring sources, with the job, the fit, the poster, the person to contact, and the Hiring source each lead came from (its job title and country). | 0 credits |
 | `list_templates` | Lists system templates, workspace templates, and authoring rules. | 0 credits |
 
 ### Discovery sources
@@ -79,17 +79,18 @@ The connector advertises 17 tools. `qualify` and `catchup_source` are hidden fro
 | Tool | What it does | Cost |
 |---|---|---:|
 | `preview_source` | Optionally previews a keyword, creator, Company page, Hiring, or post source. A Hiring preview lists recent job posts, not scored yet. Completed empty previews retain their fixed charge; a Company page with no recent original posts is a valid empty result. | 1 credit |
-| `add_source` | Adds keyword, creator, Company page, or Hiring monitoring (1-3 job titles and a required country, or "anywhere") with an optional Daily or Custom schedule; starting it scans now, then it follows the schedule: the last 24 hours (a creator or Company page: its latest post from the last 7 days, skipped at no charge when an earlier scan already covered it), or with `lookback_days` 7 and `max_credits` the last 7 days (spent at once, outside the daily budget). It can also save a LinkedIn post PAUSED for Once-only discovery. Post scope is Commenters, Reactors, or Both (default Both); post creation never accepts or seeds a recurring schedule. | 0 credits to add, then normal discovery credits when run; with `lookback_days` 7, up to `max_credits` at once |
+| `add_source` | Adds keyword, creator, Company page, or Hiring monitoring (one role: its job title and up to two other names for it, and a required country, or "anywhere") with an optional Daily or Custom schedule; starting it scans now, then it follows the schedule: the last 24 hours (a creator or Company page: its latest post from the last 7 days, skipped at no charge when an earlier scan already covered it), or with `lookback_days` 7 and `max_credits` (the backfill credit limit) the last 7 days (spent at once, outside the daily budget). It can also save a LinkedIn post PAUSED for Once-only discovery. Post scope is Commenters, Reactors, or Both (default Both); post creation never accepts or seeds a recurring schedule. | 0 credits to add, then normal discovery credits when run; with `lookback_days` 7, up to `max_credits` at once |
 | `set_source_schedule` | Changes an existing keyword, creator, Company page, or Hiring source to Daily or to selected ISO weekdays at one local time in an IANA timezone. A Custom schedule takes effect at its next selected day and time; switching an active source to Daily makes its next scan due now (the last 24 hours; for Hiring, the time since its last scan); saving the schedule it already has changes nothing. | 0 credits |
-| `run_source_once` | Runs an active/paused keyword, creator, Company page, or Hiring source, or a paused post, once. Post Both requires at least two lead slots. Zero-engagement runs settle unused lead credits. | 0 credits to queue, then credits for leads actually found |
-| `cancel_source_run` | Stops an in-flight one-time run, including the 7-day scan that started a source. Stopping starts no other scan; the source keeps its schedule. Leads already found stay; unspent credits come back automatically. | 0 credits |
+| `run_source_once` | Runs an active/paused keyword, creator, Company page, or Hiring source, or a paused post, once. Post Both requires at least two lead slots. A Hiring run finds up to 50 leads. Zero-engagement runs settle unused lead credits. | 0 credits to queue, then credits for leads actually found |
+| `cancel_source_run` | Stops an in-flight one-time run, including the 7-day scan that started a source. Stopping starts no other scan; the source keeps its schedule. A run stopped before it picks its leads charges nothing; leads already delivered stay, and nothing more is charged. | 0 credits |
 | `catchup_source` | Legacy alias of `run_source_once`, kept for back-compat. | Same as `run_source_once` |
 | `remove_source` | Archives a source while keeping the history in place. | 0 credits |
 
 `add_source` keyword mode:
 
 - `keyword_mode` is optional and only valid when `source_type = "keyword"`.
-- Omit it, or pass `"post_engagers"`, to find people commenting on matching LinkedIn posts.
+- Omit it, or pass `"both"`, to find the people who wrote matching LinkedIn posts and the people commenting on them. When omitted and the keyword already has an active source, `add_source` uses that source in its own mode.
+- Pass `"post_engagers"` to find only the people commenting on matching LinkedIn posts.
 - Pass `"post_authors"` to find the people who wrote matching LinkedIn posts, including zero-comment posts when the author is person-shaped.
 - `source_type = "competitor_creator"` does not accept `keyword_mode`; creator sources still monitor engagers on that creator's posts.
 - `source_type = "company"` requires `profile_url` to be a LinkedIn `/company/...` URL and does not accept `keyword_mode`. It remains a Company Page source in returned source and Warm Leads metadata.
@@ -121,7 +122,7 @@ full-chain failure is reported and refunded rather than silently pausing.
 
 - Set `source_type = "post"` and provide `post_url`.
 - `post_engagement_scope` is `"commenters"`, `"reactors"`, or `"both"` (default).
-- Post sources are saved paused and are Once-only. Optionally call `preview_source`, then call `run_source_once` with a confirmed credit ceiling.
+- Post sources are saved paused and are Once-only. Optionally call `preview_source`, then call `run_source_once` with a confirmed backfill credit limit (`max_credits`).
 - The reactor capability belongs only to post sources; keyword and creator sources cannot inherit it.
 
 Examples:
@@ -152,7 +153,7 @@ Examples:
 |---|---|---:|
 | `find_email` | Finds emails for selected leads and writes results back to Warm Leads. | 5 credits per contact |
 | `qualify` | Deprecated compatibility name for re-scoring one warm lead with stored person, post, and company evidence. It reruns Luna without refreshing provider evidence. | 1 credit for one contact |
-| `draft_message` | Creates campaign-backed AI drafts for selected warm leads, or for Hiring leads with `hiring_lead_ids` (leads without a person are skipped and not charged). | 3 credits per contact |
+| `draft_message` | Creates campaign-backed AI drafts for selected warm leads, or for Hiring leads with `hiring_lead_ids`. A Hiring lead with no person yet is written to its hiring team, with no name invented. | 3 credits per message |
 | `add_hiring_lead_person` | Attaches the right person to a Hiring lead that has none, or whose poster is a recruiter. | 0 credits |
 | `save_template` | Saves a workspace template with custom variables for future drafts. | 0 credits |
 
