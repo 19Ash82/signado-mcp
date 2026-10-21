@@ -78,8 +78,8 @@ The connector advertises 17 tools. `qualify` and `catchup_source` are hidden fro
 
 | Tool | What it does | Cost |
 |---|---|---:|
-| `preview_source` | Optionally previews a keyword, creator, Company page, Hiring, or post source. A Hiring preview lists recent job posts, not scored yet. Completed empty previews retain their fixed charge; a Company page with no recent original posts is a valid empty result. | 1 credit |
-| `add_source` | Adds keyword, creator, Company page, or Hiring monitoring (one role: its job title and up to two other names for it, and a required country, or "anywhere") with an optional Daily or Custom schedule; starting it scans now, then it follows the schedule: the last 24 hours (a creator or Company page: its latest post from the last 7 days, skipped at no charge when an earlier scan already covered it), or with `lookback_days` 7 and `max_credits` (the backfill credit limit) the last 7 days (spent at once, outside the daily budget). It can also save a LinkedIn post PAUSED for Once-only discovery. Post scope is Commenters, Reactors, or Both (default Both); post creation never accepts or seeds a recurring schedule. | 0 credits to add, then normal discovery credits when run; with `lookback_days` 7, up to `max_credits` at once |
+| `preview_source` | Optionally previews a keyword, creator, Company page, Hiring, or post source. A keyword, competitor_creator or Company page source set to reactors previews who reacted to its posts. A Hiring preview lists recent job posts, not scored yet. Completed empty previews retain their fixed charge; a Company page with no recent original posts is a valid empty result. | 1 credit |
+| `add_source` | Adds keyword, creator, Company page, or Hiring monitoring (one role: its job title and up to two other names for it, and a required country, or "anywhere") with an optional Daily or Custom schedule; starting it scans now, then it follows the schedule: the last 24 hours (a creator or Company page: its latest post from the last 7 days, skipped at no charge when an earlier scan already covered it), or with `lookback_days` 7 and `max_credits` (the backfill credit limit) the last 7 days (spent at once, outside the daily budget). Keyword, creator, and Company page sources find commenters or reactors. It can also save a LinkedIn post PAUSED for Once-only discovery. Post scope is Commenters, Reactors, or Both (default Both); post creation never accepts or seeds a recurring schedule. | 0 credits to add, then normal discovery credits when run; with `lookback_days` 7, up to `max_credits` at once |
 | `set_source_schedule` | Changes an existing keyword, creator, Company page, or Hiring source to Daily or to selected ISO weekdays at one local time in an IANA timezone. A Custom schedule takes effect at its next selected day and time; switching an active source to Daily makes its next scan due now (the last 24 hours; for Hiring, the time since its last scan); saving the schedule it already has changes nothing. | 0 credits |
 | `run_source_once` | Runs an active/paused keyword, creator, Company page, or Hiring source, or a paused post, once. Post Both requires at least two lead slots. A Hiring run finds up to 50 leads. Zero-engagement runs settle unused lead credits. | 0 credits to queue, then credits for leads actually found |
 | `cancel_source_run` | Stops an in-flight one-time run, including the 7-day scan that started a source. Stopping starts no other scan; the source keeps its schedule. A run stopped before it picks its leads charges nothing; leads already delivered stay, and nothing more is charged. | 0 credits |
@@ -90,7 +90,7 @@ The connector advertises 17 tools. `qualify` and `catchup_source` are hidden fro
 
 - `keyword_mode` is optional and only valid when `source_type = "keyword"`.
 - Omit it, or pass `"both"`, to find the people who wrote matching LinkedIn posts and the people commenting on them. When omitted and the keyword already has an active source, `add_source` uses that source in its own mode.
-- Pass `"post_engagers"` to find only the people commenting on matching LinkedIn posts.
+- Pass `"post_engagers"` to find the people commenting on matching LinkedIn posts, or reacting to them when `post_engagement_scope` is `"reactors"`.
 - Pass `"post_authors"` to find the people who wrote matching LinkedIn posts, including zero-comment posts when the author is person-shaped.
 - `source_type = "competitor_creator"` does not accept `keyword_mode`; creator sources still monitor engagers on that creator's posts.
 - `source_type = "company"` requires `profile_url` to be a LinkedIn `/company/...` URL and does not accept `keyword_mode`. It remains a Company Page source in returned source and Warm Leads metadata.
@@ -123,7 +123,7 @@ full-chain failure is reported and refunded rather than silently pausing.
 - Set `source_type = "post"` and provide `post_url`.
 - `post_engagement_scope` is `"commenters"`, `"reactors"`, or `"both"` (default).
 - Post sources are saved paused and are Once-only. Optionally call `preview_source`, then call `run_source_once` with a confirmed backfill credit limit (`max_credits`).
-- The reactor capability belongs only to post sources; keyword and creator sources cannot inherit it.
+- `post_engagement_scope` on the other sources: keyword (with keyword_mode post_engagers), competitor_creator and company: commenters or reactors; omitted keeps the saved choice (commenters for a new source).
 
 Examples:
 
