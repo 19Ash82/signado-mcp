@@ -60,7 +60,7 @@ or auth header is needed.
 
 ## Tools and credit costs
 
-The connector advertises 17 tools. `qualify` and `catchup_source` are hidden from the listing but remain callable as compatibility aliases, for 19 callable tools in total.
+The connector advertises 18 tools. `qualify` and `catchup_source` are hidden from the listing but remain callable as compatibility aliases, for 20 callable tools in total.
 
 ### Read and export
 
@@ -78,10 +78,11 @@ The connector advertises 17 tools. `qualify` and `catchup_source` are hidden fro
 
 | Tool | What it does | Cost |
 |---|---|---:|
-| `preview_source` | Optionally previews a keyword, creator, Company page, Hiring, or post source. A keyword, competitor_creator or Company page source set to reactors previews who reacted to its posts. A Hiring preview lists recent job posts, not scored yet. Completed empty previews retain their fixed charge; a Company page with no recent original posts is a valid empty result. | 1 credit |
-| `add_source` | Adds keyword, creator, Company page, or Hiring monitoring (one role: its job title and up to two other names for it, and a required country, or "anywhere") with an optional Daily or Custom schedule; starting it scans now, then it follows the schedule: the last 24 hours (a creator or Company page: its latest post from the last 7 days, skipped at no charge when an earlier scan already covered it), or with `lookback_days` 7 and `max_credits` (the backfill credit limit) the last 7 days (spent at once, outside the daily budget). Keyword, creator, and Company page sources find commenters or reactors. It can also save a LinkedIn post PAUSED for Once-only discovery. Post scope is Commenters, Reactors, or Both (default Both); post creation never accepts or seeds a recurring schedule. | 0 credits to add, then normal discovery credits when run; with `lookback_days` 7, up to `max_credits` at once |
+| `preview_source` | Optionally previews a keyword, creator, Company page, Hiring, or post source. A Hiring preview lists recent job posts, not scored yet. Completed empty previews retain their fixed charge; a Company page with no recent original posts is a valid empty result. | 1 credit |
+| `add_source` | Adds keyword, creator, Company page, or Hiring monitoring (one role: its job title and up to two other names for it, and a required country, or "anywhere") with an optional Daily or Custom schedule; starting it scans now, then it follows the schedule: the last 24 hours (a creator or Company page: its latest post from the last 7 days, skipped at no charge when an earlier scan already covered it), or with `lookback_days` 7 and `max_credits` (the backfill credit limit) the last 7 days (spent at once, outside the daily budget). It can also save a LinkedIn post PAUSED for Once-only discovery. Post scope is Commenters, Reactors, or Both (default Both); post creation never accepts or seeds a recurring schedule. By default, a new keyword source finds post authors, commenters and reactors; creator and Company page sources find commenters and reactors. | 0 credits to add, then normal discovery credits when run, and 1 credit for a scheduled scan that brings you nobody; with `lookback_days` 7, up to `max_credits` at once |
 | `set_source_schedule` | Changes an existing keyword, creator, Company page, or Hiring source to Daily or to selected ISO weekdays at one local time in an IANA timezone. A Custom schedule takes effect at its next selected day and time; switching an active source to Daily makes its next scan due now (the last 24 hours; for Hiring, the time since its last scan); saving the schedule it already has changes nothing. | 0 credits |
-| `run_source_once` | Runs an active/paused keyword, creator, Company page, or Hiring source, or a paused post, once. Post Both requires at least two lead slots. A Hiring run finds up to 50 leads. Zero-engagement runs settle unused lead credits. | 0 credits to queue, then credits for leads actually found |
+| `set_daily_budget` | Shows the workspace's total daily discovery budget (the most Discovery spends per day across all Daily and Custom sources, shared between them), whether you saved it or it is the automatic default, what Reset on the Sources page would save today, the most you can set (a paid plan: its monthly credits plus purchased credits) and the balance; with a number and `confirm: true`, sets it (0 pauses discovery). A number set here counts as your own choice, as in the app; Reset to the automatic default is on the Sources page. | 0 credits |
+| `run_source_once` | Runs an active/paused keyword, creator, Company page, or Hiring source, or a paused post, once. Post Both requires at least two lead slots. A Hiring run finds up to 50 leads. Zero-engagement runs settle unused lead credits. A one-time run never pays a scan fee. | 0 credits to queue, then credits for leads actually found, never a scan fee |
 | `cancel_source_run` | Stops an in-flight one-time run, including the 7-day scan that started a source. Stopping starts no other scan; the source keeps its schedule. A run stopped before it picks its leads charges nothing; leads already delivered stay, and nothing more is charged. | 0 credits |
 | `catchup_source` | Legacy alias of `run_source_once`, kept for back-compat. | Same as `run_source_once` |
 | `remove_source` | Archives a source while keeping the history in place. | 0 credits |
@@ -89,8 +90,10 @@ The connector advertises 17 tools. `qualify` and `catchup_source` are hidden fro
 `add_source` keyword mode:
 
 - `keyword_mode` is optional and only valid when `source_type = "keyword"`.
-- Omit it, or pass `"both"`, to find the people who wrote matching LinkedIn posts and the people commenting on them. When omitted and the keyword already has an active source, `add_source` uses that source in its own mode.
-- Pass `"post_engagers"` to find the people commenting on matching LinkedIn posts, or reacting to them when `post_engagement_scope` is `"reactors"`.
+- Omit it for a new keyword to find the people who wrote matching LinkedIn posts, the people commenting on them and the people reacting to them, from one budget (All; Authors + commenters while All is not open to your workspace). When omitted and the keyword already has an active source, `add_source` uses that source in its own mode, and an existing source keeps its audience.
+- Pass `"all"` to ask for All on purpose. A person found more than once in a run is one lead, charged once.
+- Pass `"both"` (Authors + commenters) to find the people who wrote matching posts and the people commenting on them, without reactors.
+- Pass `"post_engagers"` to find the people commenting on or reacting to matching LinkedIn posts, from one budget (commenters only while that is not open to your workspace). Add `post_engagement_scope` `"commenters"` or `"reactors"` to take only one of them.
 - Pass `"post_authors"` to find the people who wrote matching LinkedIn posts, including zero-comment posts when the author is person-shaped.
 - `source_type = "competitor_creator"` does not accept `keyword_mode`; creator sources still monitor engagers on that creator's posts.
 - `source_type = "company"` requires `profile_url` to be a LinkedIn `/company/...` URL and does not accept `keyword_mode`. It remains a Company Page source in returned source and Warm Leads metadata.
@@ -111,21 +114,28 @@ remains canonical if an MCP runtime cannot render a PostgreSQL-supported zone
 alias locally; the tool returns a localization warning instead of failing after
 the schedule was saved.
 
-Creator and Company page sources use the same profile-source credit
-infrastructure: 1 credit for Preview or a Daily profile-post scan, 5 credits per
-new warm lead, and the plan-configured re-engagement rate. They reuse the
-existing creator ledger actions and refund rules without changing their public
-source type. A valid scan with no recent posts keeps the scan charge; a hard
-full-chain failure is reported and refunded rather than silently pausing.
+A scheduled scan that brings you nobody costs 1 credit, even when your
+exclusions removed everyone it found. When it brings you people, you pay only
+for them: 5 credits per new lead, 1 credit per person already in your leads. A
+person found more than once in a run is charged once. Run
+once and a source's first scan never pay a scan fee. A scan that fails on our
+side, or that you stop while it is still searching, costs nothing. This applies
+to keyword, creator and Company page sources. A scheduled Hiring scan that
+brings you no lead costs 1 credit the same way, with no price for people
+already in your leads. A Preview costs 1 credit.
 
 `add_source` post mode:
 
 - Set `source_type = "post"` and provide `post_url`.
 - `post_engagement_scope` is `"commenters"`, `"reactors"`, or `"both"` (default).
 - Post sources are saved paused and are Once-only. Optionally call `preview_source`, then call `run_source_once` with a confirmed backfill credit limit (`max_credits`).
-- `post_engagement_scope` on the other sources: keyword (with keyword_mode post_engagers), competitor_creator and company: commenters or reactors; omitted keeps the saved choice (commenters for a new source).
+- Reactors are not only for post sources: a keyword source in `keyword_mode = "post_engagers"` takes `post_engagement_scope` `"commenters"`, `"reactors"`, or `"both"`. A `competitor_creator` or `company` source takes the same three. A new keyword, creator or company source without it takes `"both"` while that is open to your workspace, `"commenters"` otherwise.
 
 Examples:
+
+```json
+{ "source_type": "keyword", "keyword": "website redesign", "confirm": false }
+```
 
 ```json
 { "source_type": "keyword", "keyword": "website redesign", "keyword_mode": "post_engagers", "confirm": false }
@@ -176,7 +186,7 @@ Every paid response includes `credits_charged`, `balance_after`, and `session_sp
 
 - Grok Bot desktop 0.66.0: a fresh 2026-10-02 connection, added by asking the bot in chat to add a custom MCP server called signado at `https://mcp.signado.io/mcp` with OAuth sign-in and no auth header, completed OAuth from the connect card, listed 15 advertised tools, and passed `ping` and `list_warm_leads`.
 
-The current 17-tool source contract (Release C) requires the same client acceptance after an MCP deployment. The four 14-tool checks above are dated historical receipts.
+The current 18-tool source contract (Release C plus `set_daily_budget`) requires the same client acceptance after an MCP deployment. The four 14-tool checks above are dated historical receipts.
 
 ## Links
 
