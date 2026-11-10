@@ -199,4 +199,4 @@ The current 18-tool source contract (Release C plus `set_daily_budget`) requires
 
 ## Trial and pricing
 
-New accounts choose Starter, Growth, or Scale for a 7-day free trial with the selected plan's full credits and MCP access. A card is required, and you can cancel anytime. Existing Free accounts are grandfathered and keep their credits.
+New accounts choose Lite, Starter, or Growth for a 7-day free trial with the selected plan's full credits and MCP access. Scale is an upgrade inside the app. A card is required, and you can cancel anytime. Existing Free accounts are grandfathered and keep their credits.
