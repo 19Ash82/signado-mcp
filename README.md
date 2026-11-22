@@ -163,7 +163,7 @@ Examples:
 |---|---|---:|
 | `find_email` | Finds emails for selected leads and writes results back to Warm Leads. | 5 credits per contact |
 | `qualify` | Deprecated compatibility name for re-scoring one warm lead with stored person, post, and company evidence. It reruns Luna without refreshing provider evidence. | 1 credit for one contact |
-| `draft_message` | Creates campaign-backed AI drafts for selected warm leads, or for Hiring leads with `hiring_lead_ids`. A Hiring lead with no person yet is written to its hiring team, with no name invented. | 3 credits per message |
+| `draft_message` | Creates campaign-backed AI drafts for selected warm leads, or for Hiring leads with `hiring_lead_ids`. A Hiring lead with no person yet is written to its hiring team, with no name invented. | 1 credit per message |
 | `add_hiring_lead_person` | Attaches the right person to a Hiring lead that has none, or whose poster is a recruiter. | 0 credits |
 | `save_template` | Saves a workspace template with custom variables for future drafts. | 0 credits |
 
@@ -199,4 +199,4 @@ The current 18-tool source contract (Release C plus `set_daily_budget`) requires
 
 ## Trial and pricing
 
-New accounts choose Lite, Starter, or Growth for a 7-day free trial with the selected plan's full credits and MCP access. Scale is an upgrade inside the app. A card is required, and you can cancel anytime. Existing Free accounts are grandfathered and keep their credits.
+New accounts choose Lite, Starter, or Growth for a 7-day free trial with the selected plan's MCP access. Scale is an upgrade inside the app. A card is required, and you can cancel anytime. Existing Free accounts are grandfathered and keep their credits.
