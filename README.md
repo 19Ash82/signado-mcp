@@ -116,7 +116,7 @@ the schedule was saved.
 
 A scheduled scan that brings you nobody costs 1 credit, even when your
 exclusions removed everyone it found. When it brings you people, you pay only
-for them: 5 credits per new lead, 1 credit per person already in your leads. A
+for them: 3 credits per new lead, 1 credit per person already in your leads. A
 person found more than once in a run is charged once. Run
 once and a source's first scan never pay a scan fee. A scan that fails on our
 side, or that you stop while it is still searching, costs nothing. This applies
